@@ -1,3 +1,5 @@
+/* eslint-disable newline-after-var*/
+
 export default class OrgChart {
   constructor(options) {
     this._name = 'OrgChart';
@@ -206,7 +208,8 @@ export default class OrgChart {
     let subObj = {
       'name': li.firstChild.textContent.trim(),
       'relationship': (li.parentNode.parentNode.nodeName === 'LI' ? '1' : '0') +
-        (li.parentNode.children.length > 1 ? 1 : 0) + (li.children.length ? 1 : 0)
+        (li.parentNode.children.length > 1 ? 1 : 0) + (li.children.length ? 1 : 0),
+      'children': li.parentNode.children.length
     };
 
     if (li.id) {
@@ -222,6 +225,7 @@ export default class OrgChart {
   }
   _attachRel(data, flags) {
     data.relationship = flags + (data.children && data.children.length > 0 ? 1 : 0);
+    data.children = data.children;
     if (data.children) {
       for (let item of data.children) {
         this._attachRel(item, '1' + (data.children.length > 1 ? 1 : 0));
@@ -347,7 +351,7 @@ export default class OrgChart {
       }
     } else {
       Array.from(node.querySelectorAll(':scope > .edge')).forEach((el) => {
-        el.classList.remove('fa-chevron-up', 'fa-chevron-down', 'fa-chevron-right', 'fa-chevron-left');
+        el.classList.remove('fa-chevron-right', 'fa-chevron-left');
       });
     }
   }
@@ -1233,7 +1237,7 @@ export default class OrgChart {
     if (!dropZone.parentNode.parentNode.nextElementSibling) { // if the drop zone is a leaf node
       let bottomEdge = document.createElement('i');
 
-      bottomEdge.setAttribute('class', 'edge verticalEdge bottomEdge fa');
+      bottomEdge.setAttribute('class', 'edge verticalEdge bottomEdge fa fa-chevron-up');
       dropZone.appendChild(bottomEdge);
       dropZone.parentNode.setAttribute('colspan', 2);
       let table = this._closest(dropZone, function (el) {
@@ -1346,7 +1350,7 @@ export default class OrgChart {
       // construct the content of node
       let nodeDiv = document.createElement('div');
 
-      delete nodeData.children;
+      nodeData.children = nodeData.children ? nodeData.children.length : 0;
       nodeDiv.dataset.source = JSON.stringify(nodeData);
       if (nodeData[opts.nodeId]) {
         nodeDiv.id = nodeData[opts.nodeId];
@@ -1372,7 +1376,6 @@ export default class OrgChart {
       `;
       // append 4 direction arrows or expand/collapse buttons
       let flags = nodeData.relationship || '';
-
       if (opts.verticalDepth && (level + 2) > opts.verticalDepth) {
         if ((level + 1) >= opts.verticalDepth && Number(flags.substr(2, 1))) {
           let toggleBtn = document.createElement('i'),
@@ -1402,7 +1405,7 @@ export default class OrgChart {
             symbol = document.createElement('i'),
             title = nodeDiv.querySelector(':scope > .title');
 
-          bottomEdge.setAttribute('class', 'edge verticalEdge bottomEdge fa');
+          bottomEdge.setAttribute('class', 'edge verticalEdge bottomEdge fa fa-chevron-up');
           nodeDiv.appendChild(bottomEdge);
           symbol.setAttribute('class', 'fa ' + opts.parentNodeSymbol + ' symbol');
           title.insertBefore(symbol, title.children[0]);
@@ -1431,7 +1434,7 @@ export default class OrgChart {
     let that = this,
       opts = this.options,
       nodeWrapper,
-      childNodes = nodeData.children,
+      childNodes = (nodeData.children && nodeData.children.length > 0) && nodeData.children,
       isVerticalNode = opts.verticalDepth && (level + 1) >= opts.verticalDepth;
 
     if (Object.keys(nodeData).length > 1) { // if nodeData has nested structure
@@ -1441,6 +1444,7 @@ export default class OrgChart {
       }
       this._createNode(nodeData, level)
       .then(function (nodeDiv) {
+
         if (isVerticalNode) {
           nodeWrapper.insertBefore(nodeDiv, nodeWrapper.firstChild);
         } else {
